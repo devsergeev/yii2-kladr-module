@@ -1,0 +1,7 @@
+.select2-container--bootstrap .select2-results__option .parents-address {
+    font-size: .8rem;
+    color: #666666;
+}
+.select2-container--bootstrap .select2-results__option--highlighted[aria-selected] .parents-address {
+    color: #b1b1b1;
+}
