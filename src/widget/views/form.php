@@ -1,9 +1,4 @@
 <?php
-/**
- * @var $model yii\db\ActiveRecord
- * @var $attribute string
- * @var $form devsergeev\yii2KladrModule\widget\ActiveForm
- */
 devsergeev\yii2KladrModule\widget\assets\Kladr::register($this);
 ?>
 <div id="kladr-block">
@@ -38,5 +33,9 @@ devsergeev\yii2KladrModule\widget\assets\Kladr::register($this);
         </div>
     </div>
 
-    <?= $form->field($model, $attribute)->textInput() ?>
+    <?php
+    /** @var $context devsergeev\yii2KladrModule\widget\KladrWidget */
+    $context = $this->context;
+    echo $context->form->field($context->model, $context->attribute)->hiddenInput()
+    ?>
 </div>
