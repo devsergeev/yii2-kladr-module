@@ -1,6 +1,6 @@
 <?php
 
-// TODO письменное отображение адреса, + пристыковать федеральные округа
+// TODO добавить федеральные округа
 
 namespace devsergeev\yii2KladrModule\models;
 
@@ -57,6 +57,29 @@ class Kladr extends ActiveRecord
             }
         }
         return [];
+    }
+
+    public static function getStringAddressByCode(string $code): string
+    {
+        $addresStr = '';
+        $addressArr = self::getAddressByCode($code);
+        $indexArr = [
+            'pSocrRegion',
+            'pNameRegion',
+            'pSocrDistrict',
+            'pNameDistrict',
+            'pSocrCity',
+            'pNameCity',
+            'socr',
+            'name'
+        ];
+        foreach ($indexArr as $index) {
+            if (isset($addressArr[$index])) {
+                $addresStr .= $addressArr[$index] . (stripos($index, 'socr') !== false ? '.' : ',') . ' ';
+            }
+        }
+        $addresStr = trim($addresStr, ', ');
+        return $addresStr;
     }
 
     public static function getRegionListForSelect(string $name): array
