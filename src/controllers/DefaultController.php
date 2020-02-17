@@ -46,4 +46,25 @@ class DefaultController extends Controller
         Yii::$app->response->format = Response::FORMAT_JSON;
         return Kladr::getAddressByCode($code);
     }
+
+    public function actionGetStringAddressByCode(string $code): string
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $address = Kladr::getAddressByCode($code);
+        return Kladr::getStringAddressByAddress($address);
+    }
+
+    public function actionSearchAddressByString(string $string): array
+    {
+        $result = [];
+        $addresses = Kladr::getAdressesByStringWithSort($string);
+        foreach ($addresses as $address) {
+            $result[] = [
+                'id' => $address['code'],
+                'text' => Kladr::getStringAddressByAddress($address),
+            ];
+        }
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return ['results' => $result];
+    }
 }

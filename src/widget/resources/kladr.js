@@ -5,7 +5,7 @@
         $kladrSelectDistrict = $('#kladr-select-district'),
         $kladrSelectCity = $('#kladr-select-city'),
         $kladrSelectLocality = $('#kladr-select-locality'),
-        $kladrSelectCode = $('#updatecontragent-address'),
+        $kladrSelectCode = $('#updatecontragent-address, #createcontragent-address'),
         $kladrSelectReset = $('#kladr-button-reset');
 
     $kladrSelectRegion.select2({

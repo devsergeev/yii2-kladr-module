@@ -61,9 +61,14 @@ class Kladr extends ActiveRecord
 
     public static function getStringAddressByCode(string $code): string
     {
+        $address = self::getAddressByCode($code);
+        return self::getStringAddressByAddress($address);
+    }
+
+    public static function getStringAddressByAddress(array $address)
+    {
         $addresStr = '';
-        $addressArr = self::getAddressByCode($code);
-        $indexArr = [
+        $indexes = [
             'pSocrRegion',
             'pNameRegion',
             'pSocrDistrict',
@@ -71,15 +76,67 @@ class Kladr extends ActiveRecord
             'pSocrCity',
             'pNameCity',
             'socr',
-            'name'
+            'name',
         ];
-        foreach ($indexArr as $index) {
-            if (isset($addressArr[$index])) {
-                $addresStr .= $addressArr[$index] . (stripos($index, 'socr') !== false ? '.' : ',') . ' ';
+        foreach ($indexes as $index) {
+            if (isset($address[$index])) {
+                $addresStr .= $address[$index] . (stripos($index, 'socr') !== false ? '.' : ',') . ' ';
             }
         }
         $addresStr = trim($addresStr, ', ');
         return $addresStr;
+    }
+
+    public static function getAdressesByString(string $string): array
+    {
+        $result = [];
+        $words = explode(' ', $string);
+        $rows = (new Query())
+            ->select(['level', 'name', 'region', 'district', 'city', 'locality'])
+            ->from('kladr')
+            ->where(['OR LIKE', 'name', $words])
+            ->orderBy('level')
+            ->limit(100)
+            ->all();
+        foreach ($rows as $row) {
+            $addresses = self::getList($row['level'], $row['name'], $row['region'], $row['district'], $row['city'], $row['locality'], true);
+            foreach ($addresses as $address) {
+                $result[] = $address;
+            }
+        }
+
+        return $result;
+    }
+
+    public static function getAdressesByStringWithSort(string $string): array
+    {
+        if ($result = self::getAdressesByString($string)) {
+            $words = explode(' ', $string);
+            foreach ($result as &$address) {
+                $address['weight'] = 0;
+                $indexWeights = [
+                    'pNameRegion' => 3,
+                    'pNameDistrict' => 2,
+                    'pNameCity' => 1,
+                    'name' => 0,
+                ];
+                foreach ($indexWeights as $index => $weight) {
+                    foreach ($words as $word) {
+                        if (isset($address[$index]) && mb_stripos($address[$index], $word) !== false) {
+                            $address['weight'] += $weight + (4 - $address['level']);
+                        }
+                    }
+                }
+            }
+            usort($result, static function ($a, $b) {
+                if ($a['weight'] === $b['weight']) {
+                    return 0;
+                }
+                return ($a['weight'] > $b['weight']) ? -1 : 1;
+            });
+        }
+
+        return $result;
     }
 
     public static function getRegionListForSelect(string $name): array
@@ -180,7 +237,8 @@ class Kladr extends ActiveRecord
         int $region = null,
         int $district = null,
         int $city = null,
-        int $locality = null
+        int $locality = null,
+        bool $strict = false
     ): array
     {
         $query = (new Query())->from('kladr AS t1');
@@ -261,7 +319,11 @@ class Kladr extends ActiveRecord
             $query->andWhere(['t1.locality' => $locality]);
         }
         if ($name) {
-            $query->andWhere(['like', 't1.name', $name]);
+            if ($strict) {
+                $query->andWhere(['t1.name' => $name]);
+            } else {
+                $query->andWhere(['like', 't1.name', $name]);
+            }
         }
         if ($level !== self::REGION) {
             $query->limit(10);
